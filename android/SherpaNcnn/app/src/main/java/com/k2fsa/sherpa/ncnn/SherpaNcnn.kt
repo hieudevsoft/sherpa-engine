@@ -1,6 +1,8 @@
 package com.k2fsa.sherpa.ncnn
 
 import android.content.res.AssetManager
+import android.util.Log
+import java.lang.Exception
 
 data class FeatureExtractorConfig(
     var sampleRate: Float,
@@ -42,10 +44,15 @@ class SherpaNcnn(
     private val ptr: Long
 
     init {
-        if (assetManager != null) {
-            ptr = newFromAsset(assetManager, config)
-        } else {
-            ptr = newFromFile(config)
+        ptr = try {
+             if (assetManager != null) {
+                newFromAsset(assetManager, config)
+            } else {
+                newFromFile(config)
+            }
+        }catch (e:Exception){
+            e.localizedMessage?.let { Log.d("DEBUG", it) }
+            0L
         }
     }
 
@@ -53,8 +60,7 @@ class SherpaNcnn(
         delete(ptr)
     }
 
-    fun acceptSamples(samples: FloatArray) =
-        acceptWaveform(ptr, samples = samples, sampleRate = config.featConfig.sampleRate)
+    fun acceptSamples(samples: FloatArray) = acceptWaveform(ptr, samples = samples, sampleRate = config.featConfig.sampleRate)
 
     fun isReady() = isReady(ptr)
 
@@ -64,8 +70,7 @@ class SherpaNcnn(
     fun isEndpoint(): Boolean = isEndpoint(ptr)
     fun reset() = reset(ptr)
 
-    val text: String
-        get() = getText(ptr)
+    val text: String get() = getText(ptr)
 
     private external fun newFromAsset(
         assetManager: AssetManager,
@@ -86,9 +91,10 @@ class SherpaNcnn(
     private external fun getText(ptr: Long): String
 
     companion object {
-        init {
+        fun loadLibrary(){
             System.loadLibrary("sherpa-ncnn-jni")
         }
+
     }
 }
 
@@ -102,8 +108,14 @@ fun getFeatureExtractorConfig(
     )
 }
 
-fun getDecoderConfig(method: String, numActivePaths: Int): DecoderConfig {
-    return DecoderConfig(method = method, numActivePaths = numActivePaths)
+fun getDecoderConfig(
+    method: String,
+    numActivePaths: Int
+): DecoderConfig {
+    return DecoderConfig(
+        method = method,
+        numActivePaths = numActivePaths
+    )
 }
 
 
@@ -156,7 +168,7 @@ fun getModelConfig(type: Int, useGPU: Boolean): ModelConfig? {
         }
 
         2 -> {
-            val modelDir = "sherpa-ncnn-streaming-zipformer-bilingual-zh-en-2023-02-13"
+            val modelDir = "sherpa-ncnn-streaming-zipformer-zh-14M-2023-02-23"
             return ModelConfig(
                 encoderParam = "$modelDir/encoder_jit_trace-pnnx.ncnn.param",
                 encoderBin = "$modelDir/encoder_jit_trace-pnnx.ncnn.bin",

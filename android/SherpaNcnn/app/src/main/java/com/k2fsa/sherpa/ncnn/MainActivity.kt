@@ -18,7 +18,9 @@ private const val TAG = "sherpa-ncnn"
 private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
 
 class MainActivity : AppCompatActivity() {
-    private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
+    private val permissions: Array<String> = arrayOf(
+        Manifest.permission.RECORD_AUDIO,
+    )
 
     // If there is a GPU and useGPU is true, we will use GPU
     // If there is no GPU and useGPU is true, we won't use GPU
@@ -69,11 +71,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
-
         Log.i(TAG, "Start to initialize model")
         initModel()
         Log.i(TAG, "Finished initializing model")
-
         recordButton = findViewById(R.id.record_button)
         recordButton.setOnClickListener { onclick() }
 
@@ -151,20 +151,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initMicrophone(): Boolean {
-        if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
-            ) != PackageManager.PERMISSION_GRANTED
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
             return false
         }
 
         val numBytes = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat)
-        Log.i(
-            TAG,
-            "buffer size in milliseconds: ${numBytes * 1000.0f / sampleRateInHz}"
-        )
+        Log.i(TAG, "buffer size in milliseconds: ${numBytes * 1000.0f / sampleRateInHz}")
 
         audioRecord = AudioRecord(
             audioSource,
@@ -182,9 +176,8 @@ class MainActivity : AppCompatActivity() {
             featureDim = 80
         )
         //Please change the argument "type" if you use a different model
-        val modelConfig = getModelConfig(type = 2, useGPU = useGPU)!!
+        val modelConfig = getModelConfig(type = 1, useGPU = useGPU)!!
         val decoderConfig = getDecoderConfig(method = "greedy_search", numActivePaths = 4)
-
         val config = RecognizerConfig(
             featConfig = featConfig,
             modelConfig = modelConfig,
@@ -194,7 +187,7 @@ class MainActivity : AppCompatActivity() {
             rule2MinTrailingSilence = 0.8f,
             rule3MinUtteranceLength = 20.0f,
         )
-
+        SherpaNcnn.loadLibrary()
         model = SherpaNcnn(
             assetManager = application.assets,
             config = config,

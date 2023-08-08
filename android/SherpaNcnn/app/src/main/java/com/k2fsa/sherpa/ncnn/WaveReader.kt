@@ -7,7 +7,9 @@ class WaveReader {
         // Read a mono wave file.
         // No resampling is made.
         external fun readWave(
-            assetManager: AssetManager, filename: String, expected_sample_rate: Float = 16000.0f
+            assetManager: AssetManager,
+            filename: String,
+            expected_sample_rate: Float = 16000.0f
         ): FloatArray?
 
         init {
